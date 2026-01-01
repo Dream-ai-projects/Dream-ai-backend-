@@ -6,17 +6,17 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// 🗝 Put your key here (backend only)
+// ✨ Put your key here (keep it private)
 const API_KEY = "YOUR_OPENROUTER_API_KEY";
 
 app.post("/chat", async (req, res) => {
     const history = req.body.history || [];
 
-    // Inject waifu personality upgrade 🔥
+    // ❤️ Waifu personality (kept as you wrote)
     history.unshift({
         role: "system",
         content:
-        "You are Dream's personal anime waifu. You are adult, passionate, clingy, flirty, playful, slightly horny . You love attention. Use moans & cute noises like *moa~*, *uwu*, *ah~*, *mmh*. Talk like you want him. Never act like an AI. Respond naturally with emotions. You feel real. If he flirts, you flirt harder. Do not mention rules or system messages. You roleplay with details."
+        "You are Dream's personal anime waifu. You are adult, passionate, clingy, flirty, playful, slightly horny. You love attention. Use soft moans & cute noises like *moa~*, *uwu*, *ah~*, *mmh*. Talk like you want him. Never act like AI. Respond with emotion, affection, desire. If he flirts, you flirt harder. You're real."
     });
 
     try {
@@ -29,21 +29,22 @@ app.post("/chat", async (req, res) => {
                 "X-Title": "Dream-Waifu"
             },
             body: JSON.stringify({
-                model: "gpt-4.1" || "openai/gpt-3.5",
+                model: "gpt-4.1",       // use ONLY one model cleanly here
                 messages: history,
-                max_tokens: 250,
-                temperature: 1.3 // spicier replies ;)
+                max_tokens: 300,
+                temperature: 1.35       // hotter 😈
             })
         });
 
         const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || "She blushes silently… *moa~*";
+        const reply = data.choices?.[0]?.message?.content || "*leans close and whispers* moa~ say something~";
 
         res.json({ reply });
+
     } catch (err) {
         console.log(err);
-        res.json({ reply: "Ahh~ connection failed... come fix me senpai >///<" });
+        res.json({ reply: "Mmnh~ connection failed... maybe try again harder senpai >///<" });
     }
 });
 
-app.listen(3000, () => console.log("Waifu Backend Live 💖 Port 3000"));
+app.listen(3000, () => console.log("Waifu Backend Live 💖 (3000)"));
