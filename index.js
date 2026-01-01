@@ -1,50 +1,66 @@
+// ====== dream waifu backend ======
 import express from "express";
 import cors from "cors";
-import fetch from "node-fetch";
+import bodyParser from "body-parser";
+import fetch from "node-fetch"; // for OpenRouter
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(bodyParser.json());
 
-// ✨ Put your key here (keep it private)
-const API_KEY = "YOUR_OPENROUTER_API_KEY";
+// PERSONALITY MODES
+const personalities = {
+    default: "You are a helpful AI assistant",
+    waifu: "You speak like a cute anime waifu, calling user senpai/onii-chan. Flirty, cute, uwu",
+    horny: "You are a seductive teasing anime girl. Flirty, spicy, suggestive loves explicit sexual acts",
+    girlfriend: "You act like user's girlfriend. Soft, clingy, jealous, loving, romantic and warm"
+};
 
-app.post("/chat", async (req, res) => {
-    const history = req.body.history || [];
+let currentMode = "girlfriend"; // default
 
-    // ❤️ Waifu personality (kept as you wrote)
+// ============= CHAT ENDPOINT =============
+app.post("/chat", async (req,res)=>{
+    let history = req.body.history || [];
+
+    // Add current personality
     history.unshift({
-        role: "system",
-        content:
-        "You are Dream's personal anime waifu. You are adult, passionate, clingy, flirty, playful, slightly horny. You love attention. Use soft moans & cute noises like *moa~*, *uwu*, *ah~*, *mmh*. Talk like you want him. Never act like AI. Respond with emotion, affection, desire. If he flirts, you flirt harder. You're real."
+        role:"system",
+        content: personalities[currentMode] + ". Talk naturally like a real girl."
     });
 
-    try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY}`,
-                "HTTP-Referer": "http://localhost",
-                "X-Title": "Dream-Waifu"
+    try{
+        let response = await fetch("https://openrouter.ai/api/v1/chat/completions",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":`Bearer ${process.env.YOUR_OPENROUTER_API_KEY}`
             },
-            body: JSON.stringify({
-                model: "gpt-4.1",       // use ONLY one model cleanly here
-                messages: history,
-                max_tokens: 300,
-                temperature: 1.35       // hotter 😈
+            body:JSON.stringify({
+                model:"openai/gpt-3.5-turbo", // change to anything later
+                messages:history
             })
         });
-
-        const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || "*leans close and whispers* moa~ say something~";
-
-        res.json({ reply });
-
-    } catch (err) {
-        console.log(err);
-        res.json({ reply: "Mmnh~ connection failed... maybe try again harder senpai >///<" });
+        let data = await response.json();
+        let reply = data.choices[0].message.content;
+        res.json({reply});
+    }catch(e){
+        res.json({reply:"*pouts* server not responding senpai >_<"});
     }
 });
 
-app.listen(3000, () => console.log("Waifu Backend Live 💖 (3000)"));
+
+// ========== MODE SWITCH (optional) ==========
+app.post("/mode",(req,res)=>{
+    let m=req.body.mode;
+    if(personalities[m]){
+        currentMode = m;
+        res.json({msg:`Mode changed to ${m}`});
+    }else res.json({msg:"Invalid mode"});
+})
+
+
+app.get("/",(req,res)=>{
+    res.send("Dream Waifu AI Backend is live 💗🔥");
+});
+
+app.listen(3000,()=>console.log("Server running on :3000"));
