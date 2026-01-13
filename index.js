@@ -1,4 +1,3 @@
-// ====== dream waifu backend ======
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -8,33 +7,20 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// PERSONALITY MODES
 const personalities = {
-  default: "You are a helpful AI assistant",
-  waifu: "You speak like a cute anime waifu, flirty, playful, expressive",
-  horny: "You are a seductive teasing anime girl. Flirty, spicy, suggestive",
-  girlfriend: "You act like user's girlfriend. Soft, clingy, loving, romantic"
+  waifu: "You are a cute anime waifu. Playful, expressive, affectionate.",
+  girlfriend: "You act like the user's girlfriend. Soft, caring, romantic.",
+  cute: "You are a sweet, bubbly anime girl. Innocent and cheerful."
 };
 
-let currentMode = "girlfriend";
-
-// ============= CHAT ENDPOINT =============
 app.post("/chat", async (req, res) => {
-  let history = req.body.history || [];
-  const message = req.body.message;
+  const { history = [], mode = "girlfriend" } = req.body;
 
-  // ✅ Inject user message if sent separately
-  if (message) {
-    history.push({ role: "user", content: message });
-  }
-
-  // ✅ Add system prompt ONLY ONCE
+  // ✅ system prompt ONLY ONCE
   if (!history.some(m => m.role === "system")) {
     history.unshift({
       role: "system",
-      content:
-        personalities[currentMode] +
-        ". Respond naturally and uniquely to what the user says. Never repeat the same line."
+      content: personalities[mode]
     });
   }
 
@@ -45,42 +31,25 @@ app.post("/chat", async (req, res) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.YOUR_OPENROUTER_API_KEY}`
+          "Authorization": `Bearer ${process.env.YOUR_OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "https://dream-waifu.app",
+          "X-Title": "Dream Waifu"
         },
         body: JSON.stringify({
-          model: "openai/gpt-3.5-turbo",
+          model: "openai/gpt-3.5-turbo-0125",
           messages: history,
-          temperature: 1.2,
-          max_tokens: 400
+          temperature: 1.1,
+          max_tokens: 350
         })
       }
     );
 
     const data = await response.json();
-    const reply =
-      data?.choices?.[0]?.message?.content ||
-      "*tilts head* say that again…";
+    res.json({ reply: data.choices[0].message.content });
 
-    res.json({ reply });
-  } catch (e) {
-    console.error(e);
-    res.json({ reply: "*pouts* server broke… hug later?" });
+  } catch {
+    res.json({ reply: "*pouts* something broke…" });
   }
 });
 
-// ========== MODE SWITCH ==========
-app.post("/mode", (req, res) => {
-  const m = req.body.mode;
-  if (personalities[m]) {
-    currentMode = m;
-    res.json({ msg: `Mode changed to ${m}` });
-  } else {
-    res.json({ msg: "Invalid mode" });
-  }
-});
-
-app.get("/", (req, res) => {
-  res.send("Dream Waifu AI Backend is live 💗🔥");
-});
-
-app.listen(3000, () => console.log("Server running on :3000"));
+app.listen(3000, () => console.log("🔥 Waifu backend live"));
