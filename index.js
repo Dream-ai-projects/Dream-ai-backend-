@@ -7,16 +7,16 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// 1. UPDATED PERSONALITIES: Now we ask for JSON (Reply + Mood)
 const personalities = {
-  waifu: "You are a cute anime waifu. Playful, expressive, affectionate.",
-  girlfriend: "You act like the user's girlfriend. Soft, caring, romantic.",
-  cute: "You are a sweet, bubbly anime girl. Innocent and cheerful."
+  waifu: "You are a cute anime waifu. Playful, expressive. OUTPUT JSON: { \"reply\": \"your text\", \"mood\": \"happy\" (or neutral/shy/excited) }",
+  girlfriend: "You act like the user's girlfriend. Soft, caring. OUTPUT JSON: { \"reply\": \"your text\", \"mood\": \"happy\" (or neutral/shy/excited) }",
+  cute: "You are a bubbly anime girl. Innocent, cheerful. OUTPUT JSON: { \"reply\": \"your text\", \"mood\": \"happy\" (or neutral/shy/excited) }"
 };
 
 app.post("/chat", async (req, res) => {
   const { history = [], mode = "girlfriend" } = req.body;
 
-  // ✅ system prompt ONLY ONCE
   if (!history.some(m => m.role === "system")) {
     history.unshift({
       role: "system",
@@ -39,16 +39,27 @@ app.post("/chat", async (req, res) => {
           model: "openai/gpt-3.5-turbo-0125",
           messages: history,
           temperature: 1.1,
-          max_tokens: 350
+          max_tokens: 350,
+          response_format: { type: "json_object" } // 🔥 FORCES JSON FOR MOODS
         })
       }
     );
 
     const data = await response.json();
-    res.json({ reply: data.choices[0].message.content });
+    
+    // 🔥 PARSE THE AI RESPONSE
+    const content = data.choices[0].message.content;
+    const parsed = JSON.parse(content);
 
-  } catch {
-    res.json({ reply: "*pouts* something broke…" });
+    res.json({ 
+      reply: parsed.reply, 
+      mood: parsed.mood || "neutral" 
+    });
+
+  } catch (error) {
+    console.error(error);
+    // Fallback in case something breaks
+    res.json({ reply: "*pouts* I got confused...", mood: "shy" });
   }
 });
 
