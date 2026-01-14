@@ -27,7 +27,7 @@ app.post("/chat", async (req, res) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer YOUR_OPENROUTER_API_KEY`, // REPLACE THIS
+        "Authorization": "Bearer " + process.env.YOUR_OPENROUTER_API_KEY, // REPLACE THIS
       },
       body: JSON.stringify({
         model: "google/gemini-2.0-flash-lite-preview-02-05:free", 
