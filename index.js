@@ -34,7 +34,7 @@ app.post("/chat", async (req, res) => {
     const data = await response.json();
     res.json(JSON.parse(data.choices[0].message.content));
   } catch (e) {
-    res.json({ reply: "My head hurts...", mood: "neutral" });
+    res.json({ reply: "My head hurts... try again Master.", mood: "neutral" });
   }
 });
 
